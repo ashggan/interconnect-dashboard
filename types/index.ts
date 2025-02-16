@@ -1,4 +1,5 @@
 import { Icons } from '@/components/icons';
+import { Role } from '@prisma/client';
 
 export interface NavItem {
   title: string;
@@ -33,3 +34,15 @@ export interface FooterItem {
 export type MainNavItem = NavItemWithOptionalChildren;
 
 export type SidebarNavItem = NavItemWithChildren;
+
+export interface User {
+  id?: string;
+  name: string | null;
+  email: string | null;
+  password?: string;
+  role: Role;
+  isBlocked: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+export { Role };

@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import * as z from 'zod';
 
 const formSchema = z.object({
+  name: z.string({ message: 'Should only be letters' }),
   email: z.string().email({ message: 'Enter a valid email address' }),
   password: z
     .string()
@@ -31,13 +32,15 @@ export default function UserAuthForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl');
   const [loading, startTransition] = useTransition();
-  const defaultValues = {
+
+  const NewUser = {
+    name: '',
     email: '',
     password: ''
   };
   const form = useForm<UserFormValue>({
-    resolver: zodResolver(formSchema),
-    defaultValues
+    resolver: zodResolver(formSchema)
+    // NewUser
   });
 
   const onSubmit = async (data: UserFormValue) => {
