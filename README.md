@@ -16,5 +16,3 @@ This dashboard for BSSCONNECT INTERCONNECT
 - Linting - [ESLint](https://eslint.org)
 - Pre-commit Hooks - [Husky](https://typicode.github.io/husky/)
 - Formatting - [Prettier](https://prettier.io)
-
- 
