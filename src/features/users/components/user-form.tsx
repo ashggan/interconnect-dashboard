@@ -64,7 +64,7 @@ export default function UserForm({
           {pageTitle}
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      {/* <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
             <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
@@ -157,7 +157,7 @@ export default function UserForm({
                 name='isBlocked'
                 render={({ field }) => (
                   <FormItem>
-                    {/* <FormLabel>Block user</FormLabel> */}
+                  
                     <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
@@ -172,7 +172,7 @@ export default function UserForm({
             <Button type='submit'>Add User</Button>
           </form>
         </Form>
-      </CardContent>
+      </CardContent> */}
     </Card>
   );
 }
