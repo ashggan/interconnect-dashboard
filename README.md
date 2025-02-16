@@ -17,16 +17,4 @@ This dashboard for BSSCONNECT INTERCONNECT
 - Pre-commit Hooks - [Husky](https://typicode.github.io/husky/)
 - Formatting - [Prettier](https://prettier.io)
 
-openAI
-
-Fadwa.ali20@gmail.com
-Ldld123@
-
-
-(*M!rotic99*)
-
  
-Eslint
-Prettier
-NPM Intellisense
-Prisma
