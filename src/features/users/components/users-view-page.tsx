@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import UserForm from './user-form';
-import { getUSerById } from '@/services/user';
+import { baseUrl } from '@/lib/constants';
 
 type TUserViewPageProps = {
   userId: string;
@@ -11,15 +11,20 @@ export default async function UserViewPage({ userId }: TUserViewPageProps) {
   let pageTitle = 'Create New User';
 
   // if (userId !== 'new') {
-  //   // const data = await fakeProducts.getProductById(Number(userId));data.users ||
-  //   // const data  =  await
-  //   // user = data  || {}
-  //   // console.log( userId)
-  //   const user =await getUSerById(userId)
-  //   if (!user) {
-  //     notFound();
-  //   }
-  //   pageTitle = `Edit User`;
+  //   const response = await fetch(`${baseUrl}/api/user/${userId}`, {
+  //     method: 'GET',
+  //     cache: 'no-store'
+  //   }).then((res) => {
+  //     if (!res.ok) {
+  //       throw new Error('Failed to fetch data');
+  //     }
+  //     return res;
+  //   });
+
+  //   const data = await response.json();
+  //   user = data.partner;
+
+  //   pageTitle = `Edit Partner`;
   // }
 
   return <UserForm initialData={user} pageTitle={pageTitle} />;

@@ -2,9 +2,9 @@
 // import { searchParamsCache } from '@/lib/searchparams';
 import { DataTable as UserTable } from '@/components/ui/table/data-table';
 import { columns } from './user-tables/columns';
-import prisma from '@/lib/prisma';
 import { User } from 'types';
-import { getUSers } from '@/services/user';
+import { getAllUSers } from '@/actions/user';
+import { baseUrl } from '@/lib/constants';
 
 type UserListingPage = {};
 
@@ -21,25 +21,14 @@ export default async function UserListingPage({}: UserListingPage) {
   //   ...(search && { search }),
   //   ...(categories && { categories: categories })
   // };
-  // const allUsers = await prisma.user.findMany()
 
-  // const data = await prisma.user.findMany()
-  // console.log(data)
-  //fakeProducts.getProducts(filters);
-  const totalProducts = 19; //data?.count();data.users ||
-  const userResponse = await getUSers();
+  const response = await fetch(`${baseUrl}/api/user`);
+  const data = await response.json();
 
-  let users: User[] = [];
+  // console.log('data', data);
 
-  if (userResponse.error) {
-    console.error(userResponse.error);
-  } else if (userResponse.users) {
-    users = userResponse.users;
-  }
+  const users: User[] = data.users || [];
+  const totalUser = users.length || 0;
 
-  console.log(users);
-
-  return (
-    <UserTable columns={columns} data={users} totalItems={totalProducts} />
-  );
+  return <UserTable columns={columns} data={users} totalItems={totalUser} />;
 }

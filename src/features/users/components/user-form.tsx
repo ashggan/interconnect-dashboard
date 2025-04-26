@@ -1,8 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
   FormControl,
@@ -20,14 +20,16 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Role } from '@prisma/client';
 import { useForm } from 'react-hook-form';
-import { User } from 'types';
 import * as z from 'zod';
-import { formSchema, UserFormValues } from '../utils/form-schema';
-import { createUser } from '@/services/user';
+import { toast } from 'sonner';
+import Router from 'next/router';
+import { formSchema } from '../utils/form-schema';
+import { Role } from '@prisma/client';
+import { User } from 'types';
+import { Checkbox } from '@radix-ui/react-checkbox';
 
-export default function UserForm({
+export default function ParnterForm({
   initialData,
   pageTitle
 }: {
@@ -43,17 +45,61 @@ export default function UserForm({
     isBlocked: initialData?.isBlocked || false
   };
 
-  const form = useForm<UserFormValues>({
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     values: defaultValues
   });
 
-  async function onSubmit(values: UserFormValues) {
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
+    setSubmitError(null);
+
     try {
-      const user = await createUser({ ...values });
-      console.log('User created:', user);
+      const method = initialData ? 'PUT' : 'POST';
+      const url = initialData ? `/api/user/${initialData.id}` : '/api/user';
+      const successMessage = initialData
+        ? 'User updated successfully!'
+        : 'User created successfully!';
+      const errorMessage = initialData
+        ? 'Failed to update user'
+        : 'Failed to create user';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ...values, id: initialData?.id })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 409) {
+          // User email already exists
+          toast.error(
+            'A User with this email already exists. Please choose a different email.'
+          );
+        } else {
+          toast.error(data.error || errorMessage);
+        }
+      } else {
+        toast.success(successMessage);
+
+        if (!initialData) {
+          form.reset();
+        }
+
+        // redirect to /dashboard/user/
+        Router.push('/dashboard/user');
+      }
     } catch (error) {
-      console.error('Error:', error);
+      // setSubmitError('An unexpected error occurred');
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -64,7 +110,12 @@ export default function UserForm({
           {pageTitle}
         </CardTitle>
       </CardHeader>
-      {/* <CardContent>
+      <CardContent>
+        {submitError && (
+          <div className='mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-red-500'>
+            {submitError}
+          </div>
+        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
             <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
@@ -157,7 +208,6 @@ export default function UserForm({
                 name='isBlocked'
                 render={({ field }) => (
                   <FormItem>
-                  
                     <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
@@ -169,10 +219,12 @@ export default function UserForm({
                 )}
               />
             </div>
-            <Button type='submit'>Add User</Button>
+            <Button type='submit'>
+              {defaultValues ? 'Add User' : 'Update User'}
+            </Button>
           </form>
         </Form>
-      </CardContent> */}
+      </CardContent>
     </Card>
   );
 }

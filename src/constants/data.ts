@@ -44,15 +44,31 @@ export const navItems: NavItem[] = [
     shortcut: ['p', 'p'],
     isActive: false,
     items: [] // No child items
+  },
+  {
+    title: 'Product',
+    url: '/dashboard/product',
+    icon: 'product',
+    shortcut: ['p', 'p'],
+    isActive: false,
+    items: [] // No child items
+  },
+  {
+    title: 'Partner',
+    url: '/dashboard/partner',
+    icon: 'handshake',
+    shortcut: ['p', 'p'],
+    isActive: false,
+    items: [] // No child items
+  },
+  {
+    title: 'Trunk',
+    url: '/dashboard/trunk',
+    icon: 'cloud',
+    shortcut: ['p', 'p'],
+    isActive: false,
+    items: [] // No child items
   }
-  // {
-  //   title: 'Product',
-  //   url: '/dashboard/product',
-  //   icon: 'product',
-  //   shortcut: ['p', 'p'],
-  //   isActive: false,
-  //   items: [] // No child items
-  // },
 
   // {
   //   title: 'Account',
@@ -122,3 +138,27 @@ export const recentSalesData: SaleUser[] = [
     initials: 'SD'
   }
 ];
+
+export type Partner = {
+  id?: number;
+  partner_name?: string;
+  description?: string;
+  currency?: string;
+  country?: string;
+};
+
+export type User = {
+  id?: number;
+  name?: string;
+  email?: string;
+  password?: string;
+  role?: string;
+  isBlocked?: boolean;
+};
+
+export type Trunk = {
+  id: number;
+  name: string;
+  description?: string | null;
+  partnerId: number;
+};
