@@ -1,30 +1,32 @@
+import { Trunk } from '@/constants/data';
+import { searchParamsCache } from '@/lib/searchparams';
+import { DataTable as TrunkTable } from '@/components/ui/table/data-table';
+import { columns } from './trunk-tables/columns';
 import { baseUrl } from '@/lib/constants';
-import TrunkForm from './trunk-form';
 
-type TTrunkViewPageProps = {
-  trunkId: string;
-};
+type TrunkListingPage = {};
 
-export default async function TrunkViewPage({ trunkId }: TTrunkViewPageProps) {
-  let trunk = null;
-  let pageTitle = 'Create New Trunk';
+export default async function TrunkListingPage({}: TrunkListingPage) {
+  // Showcasing the use of search params cache in nested RSCs
+  const page = searchParamsCache.get('page');
+  const search = searchParamsCache.get('q');
+  const pageLimit = searchParamsCache.get('limit');
+  const categories = searchParamsCache.get('categories');
 
-  if (trunkId !== 'new') {
-    const response = await fetch(`${baseUrl}/api/trunk/${trunkId}`, {
-      method: 'GET',
-      cache: 'no-store'
-    }).then((res) => {
-      if (!res.ok) {
-        throw new Error('Failed to fetch data');
-      }
-      return res;
-    });
+  const filters = {
+    page,
+    limit: pageLimit,
+    ...(search && { search }),
+    ...(categories && { categories: categories })
+  };
 
-    const data = await response.json();
-    trunk = data.trunk;
+  const response = await fetch(`${baseUrl}/api/trunk`);
+  const data = await response.json();
+  const totalTrunks = data.trunks?.length || 0;
+  const trunks: Trunk[] = data.trunks || []; // Fixed this line
 
-    pageTitle = `Edit Trunk`;
-  }
-
-  return <TrunkForm initialData={trunk} pageTitle={pageTitle} />;
+  console.log('response', response);
+  return (
+    <TrunkTable columns={columns} data={trunks} totalItems={totalTrunks} />
+  );
 }

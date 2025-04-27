@@ -1,6 +1,4 @@
-import { notFound } from 'next/navigation';
 import ParnterForm from './parnter-form';
-import prisma from '@/lib/prisma';
 import { baseUrl } from '@/lib/constants';
 
 type TProductViewPageProps = {
