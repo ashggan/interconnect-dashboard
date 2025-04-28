@@ -1,5 +1,6 @@
 import React from 'react';
 import TrunkForm from './trunk-form';
+import { baseUrl } from '@/lib/constants';
 
 type TrunkViewPageProps = {
   trunkId: string;
@@ -10,7 +11,7 @@ export default async function TrunkViewPage({ trunkId }: TrunkViewPageProps) {
   let pageTitle = 'Create New Trunck';
 
   if (trunkId !== 'new') {
-    const response = await fetch(`http://localhost:3000/api/trunk/${trunkId}`, {
+    const response = await fetch(`${baseUrl}/api/trunk/${trunkId}`, {
       method: 'GET',
       cache: 'no-store'
     }).then((res) => {
@@ -23,12 +24,7 @@ export default async function TrunkViewPage({ trunkId }: TrunkViewPageProps) {
     const data = await response.json();
     trunck = data.trunk;
 
-    console.log('response', response);
-
-    // const data = response.json();
-    // trunck = data.trunk;
-
-    // pageTitle = `Edit Trunck`;
+    pageTitle = `Edit Trunck`;
   }
   return <TrunkForm initialData={trunck} pageTitle={pageTitle} />;
 }

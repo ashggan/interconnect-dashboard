@@ -23,19 +23,21 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { toast } from 'sonner';
-import Router from 'next/router';
-import { formSchema } from '../utils/form-schema';
+import { useRouter } from 'next/navigation';
 import { Role } from '@prisma/client';
 import { User } from 'types';
-import { Checkbox } from '@radix-ui/react-checkbox';
+import { Checkbox } from '@/components/ui/checkbox';
+import { formSchema } from '@/features/users/utils/form-schema';
 
-export default function ParnterForm({
+export default function UserForm({
   initialData,
   pageTitle
 }: {
   initialData: User | null;
   pageTitle: string;
 }) {
+  const router = useRouter();
+
   const defaultValues = {
     name: initialData?.name || '',
     email: initialData?.email || '',
@@ -60,44 +62,48 @@ export default function ParnterForm({
     try {
       const method = initialData ? 'PUT' : 'POST';
       const url = initialData ? `/api/user/${initialData.id}` : '/api/user';
-      const successMessage = initialData
-        ? 'User updated successfully!'
-        : 'User created successfully!';
-      const errorMessage = initialData
-        ? 'Failed to update user'
-        : 'Failed to create user';
 
       const res = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ ...values, id: initialData?.id })
+        body: JSON.stringify({
+          ...values,
+          id: initialData?.id
+        })
       });
 
-      const data = await res.json();
+      // Handle potential empty or malformed responses
+      let data;
+      const text = await res.text();
+
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (parseError) {
+        console.error('Failed to parse response:', text);
+        throw new Error('Server returned invalid JSON');
+      }
 
       if (!res.ok) {
-        if (res.status === 409) {
-          // User email already exists
-          toast.error(
-            'A User with this email already exists. Please choose a different email.'
-          );
-        } else {
-          toast.error(data.error || errorMessage);
-        }
+        toast.error(
+          data?.error || `Failed to ${initialData ? 'update' : 'create'} user`
+        );
       } else {
-        toast.success(successMessage);
-
+        toast.success(
+          `User ${initialData ? 'updated' : 'created'} successfully!`
+        );
         if (!initialData) {
           form.reset();
         }
-
-        // redirect to /dashboard/user/
-        Router.push('/dashboard/user');
+        router.push('/dashboard/user');
       }
     } catch (error) {
-      // setSubmitError('An unexpected error occurred');
+      console.error('Error:', error);
+      setSubmitError(
+        error instanceof Error ? error.message : 'An unexpected error occurred'
+      );
+      toast.error('Failed to submit form');
     } finally {
       setIsSubmitting(false);
     }
@@ -124,7 +130,7 @@ export default function ParnterForm({
                 name='name'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel> Name</FormLabel>
+                    <FormLabel>Name</FormLabel>
                     <FormControl>
                       <Input placeholder='Name' {...field} />
                     </FormControl>
@@ -137,7 +143,7 @@ export default function ParnterForm({
                 name='email'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel> Email</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input placeholder='Email' {...field} />
                     </FormControl>
@@ -150,7 +156,7 @@ export default function ParnterForm({
                 name='password'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel> Password</FormLabel>
+                    <FormLabel>Password</FormLabel>
                     <FormControl>
                       <Input
                         placeholder='Password'
@@ -195,8 +201,8 @@ export default function ParnterForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={Role.USER}>User </SelectItem>
-                        <SelectItem value={Role.ADMIN}>Admin </SelectItem>
+                        <SelectItem value={Role.USER}>User</SelectItem>
+                        <SelectItem value={Role.ADMIN}>Admin</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -207,20 +213,27 @@ export default function ParnterForm({
                 control={form.control}
                 name='isBlocked'
                 render={({ field }) => (
-                  <FormItem>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      className='m-2'
-                    />
-                    <FormLabel>Block</FormLabel>
+                  <FormItem className='flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4'>
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className='space-y-1 leading-none'>
+                      <FormLabel>Block User</FormLabel>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            <Button type='submit'>
-              {defaultValues ? 'Add User' : 'Update User'}
+            <Button type='submit' disabled={isSubmitting}>
+              {isSubmitting
+                ? 'Submitting...'
+                : initialData
+                  ? 'Update User'
+                  : 'Add User'}
             </Button>
           </form>
         </Form>

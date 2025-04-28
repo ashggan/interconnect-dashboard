@@ -100,6 +100,7 @@ export default function TrunkForm({
       const errorMessage = initialData
         ? 'Failed to update trunk'
         : 'Failed to create trunk';
+      console.log('url', url);
 
       const res = await fetch(url, {
         method,
@@ -124,7 +125,6 @@ export default function TrunkForm({
           form.reset();
         }
 
-        // redirect to /dashboard/trunk/
         router.push('/dashboard/trunk');
       }
     } catch (error) {

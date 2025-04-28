@@ -11,6 +11,7 @@ import {
 import { Edit, MoreHorizontal, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { User } from 'types';
 
 interface CellActionProps {
@@ -22,7 +23,28 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
-  const onConfirm = async () => {};
+  const onConfirm = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/user/${data.id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        router.refresh();
+        toast.success('User deleted successfully');
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || 'Failed to delete user');
+      }
+    } catch (error) {
+      toast.error('An error occurred while deleting the user');
+      console.error(error);
+    } finally {
+      setLoading(false);
+      setOpen(false);
+    }
+  };
 
   return (
     <>

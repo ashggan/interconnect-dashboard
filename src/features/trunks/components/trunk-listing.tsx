@@ -23,9 +23,8 @@ export default async function TrunkListingPage({}: TrunkListingPage) {
   const response = await fetch(`${baseUrl}/api/trunk`);
   const data = await response.json();
   const totalTrunks = data.trunks?.length || 0;
-  const trunks: Trunk[] = data.trunks || []; // Fixed this line
+  const trunks: Trunk[] = data.trunks || [];
 
-  console.log('response', response);
   return (
     <TrunkTable columns={columns} data={trunks} totalItems={totalTrunks} />
   );
