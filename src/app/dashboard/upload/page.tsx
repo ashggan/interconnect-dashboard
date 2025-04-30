@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 import UploadListingPage from '@/features/upload/components/upload-listing';
+import { auth } from '@/lib/auth';
 
 export const metadata = {
   title: 'Dashboard: Upload'

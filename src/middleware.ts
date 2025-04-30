@@ -1,17 +1,20 @@
-// Protecting routes with next-auth
-// https://next-auth.js.org/configuration/nextjs#middleware
-// https://nextjs.org/docs/app/building-your-application/routing/middleware
+import { NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
 
-import NextAuth from 'next-auth';
-import authConfig from '@/lib/auth.config';
+export async function middleware(request: Request) {
+  const session = await auth();
 
-const { auth } = NextAuth(authConfig);
+  if (!session) {
+    const requestedPage = new URL(request.url);
+    const loginUrl = new URL('/', request.url);
+    loginUrl.searchParams.set('callbackUrl', requestedPage.pathname);
 
-export default auth((req) => {
-  if (!req.auth) {
-    const url = req.url.replace(req.nextUrl.pathname, '/');
-    return Response.redirect(url);
+    return NextResponse.redirect(loginUrl);
   }
-});
 
-export const config = { matcher: ['/dashboard/:path*'] };
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ['/dashboard/:path*', '/admin/:path*']
+};

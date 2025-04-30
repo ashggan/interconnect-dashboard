@@ -5,20 +5,13 @@ import prisma from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
-  const file = formData.get('file');
-  const name = formData.get('name');
-  const userId = formData.get('userId');
+  const file = formData.get('file') as File | null;
+  const name = formData.get('name') as string | null;
+  const userId = formData.get('userId') as string | null;
 
-  if (
-    !file ||
-    typeof file !== 'object' ||
-    !name ||
-    typeof name !== 'string' ||
-    !userId ||
-    typeof userId !== 'string'
-  ) {
+  if (!file || !name || !userId) {
     return NextResponse.json(
-      { error: 'Missing or invalid required fields' },
+      { error: 'Missing required fields' },
       { status: 400 }
     );
   }
@@ -29,39 +22,50 @@ export async function POST(req: NextRequest) {
     // Ensure the uploads directory exists
     await fs.mkdir(uploadsDir, { recursive: true });
 
-    const filePath = path.join(uploadsDir, file.name);
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    // Create a unique filename to prevent collisions
+    const timestamp = new Date().getTime();
+    const fileName = `${timestamp}-${file.name}`;
+    const filePath = path.join(uploadsDir, fileName);
 
-    // check if the file exist or not
-    const fileExists = await fs.stat(filePath).catch(() => false);
-    if (fileExists) {
-      return NextResponse.json(
-        { error: 'File already exists' },
-        { status: 409 }
-      );
-    }
+    // Convert relative path to URL path for storage
+    const publicPath = `/uploads/${fileName}`;
+
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
 
     // Write the file to the uploads directory
     await fs.writeFile(filePath, fileBuffer);
 
-    // if ile upload is successful, you can save the file path to your database here
-
-    const uploadData = {
-      userId,
-      path: filePath,
-      name,
-      createdAt: new Date().toISOString()
-    };
-    // Save uploadData to your database here using prisma
-
+    // Save file information to the database
     const data = await prisma.fileUpload.create({
-      data: uploadData
+      data: {
+        userId: parseInt(userId, 10), // Convert string to integer
+        path: publicPath,
+        name: name
+        // createdAt and updatedAt are handled automatically by Prisma
+      }
     });
+
     console.log('Upload data saved to database:', data);
 
-    return NextResponse.json({ Message: 'Success', status: 200 });
+    return NextResponse.json(
+      {
+        message: 'Upload successful',
+        file: {
+          id: data.id,
+          name: data.name,
+          path: data.path
+        }
+      },
+      { status: 200 }
+    );
   } catch (error) {
-    console.log('Error occured ', error);
-    return NextResponse.json({ Message: 'Failed', status: 500 });
+    console.error('Error during file upload:', error);
+    return NextResponse.json(
+      {
+        error: 'File upload failed',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
   }
 }

@@ -1,5 +1,6 @@
 // get all users API
 
+import { hashPassword } from '@/lib/password-utils';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
@@ -61,16 +62,19 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log('body', body);
+    const hashedPassword = await hashPassword(body.password);
+
     const user = await prisma.user.create({
       data: {
         name: body.name,
         email: body.email,
-        password: body.password,
+        password: hashedPassword,
         role: body.role || 'USER', // Provide default values for optional fields
         isBlocked: body.isBlocked || false
       }
     });
+
+    console.log('user', user);
     return NextResponse.json({
       user,
       message: 'User created successfully',

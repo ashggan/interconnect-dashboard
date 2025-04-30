@@ -16,6 +16,7 @@ import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Enter a valid email address' }),
@@ -31,6 +32,7 @@ export default function UserAuthForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl');
   const [loading, startTransition] = useTransition();
+  const router = useRouter();
   const defaultValues = {
     email: '',
     password: ''
@@ -41,13 +43,27 @@ export default function UserAuthForm() {
   });
 
   const onSubmit = async (data: UserFormValue) => {
-    startTransition(() => {
-      signIn('credentials', {
+    try {
+      const result = await signIn('credentials', {
         email: data.email,
-        callbackUrl: callbackUrl ?? '/dashboard'
+        password: data.password,
+        callbackUrl: callbackUrl ?? '/dashboard/overview',
+        redirect: false
       });
-      toast.success('Signed In Successfully!');
-    });
+
+      if (result?.error) {
+        console.log(result.error);
+        toast.error('Wrong credentials');
+      } else {
+        toast.success('Signed In Successfully!');
+        startTransition(() => {
+          router.push(callbackUrl ?? '/dashboard/overview');
+        });
+      }
+    } catch (error) {
+      toast.error('An error occurred during sign in');
+      console.error(error);
+    }
   };
 
   return (

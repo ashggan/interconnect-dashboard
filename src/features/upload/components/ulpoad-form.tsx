@@ -72,6 +72,8 @@ export default function UploadForm({
     formData.append('userId', 'userId');
     formData.append('path', `/uploads/${values.file[0].name}`);
 
+    console.log('Form data:', formData);
+
     try {
       if (!values.file || values.file.length === 0) {
         toast.error('No file selected');
