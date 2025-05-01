@@ -3,8 +3,7 @@
 import { DataTable as UserTable } from '@/components/ui/table/data-table';
 import { columns } from './user-tables/columns';
 import { User } from 'types';
-
-import { getApiUrl } from '@/lib/utils';
+import { baseUrl } from '@/lib/constants';
 
 type UserListingPage = {};
 
@@ -22,16 +21,11 @@ export default async function UserListingPage({}: UserListingPage) {
   //   ...(categories && { categories: categories })
   // };
 
-  const response = await fetch(getApiUrl('user'), {
-    headers: {
-      Accept: 'application/json'
-    },
-    cache: 'no-store'
-  });
+  console.log('baseUrl', process.env.VERCEL_URL);
+
+  const response = await fetch(`${baseUrl}/api/user`);
 
   const data = await response.json();
-
-  // console.log('data', data);
 
   const users: User[] = data.users || [];
   const totalUser = users.length || 0;
