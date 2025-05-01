@@ -1,15 +1,15 @@
 import prisma from '@/lib/prisma';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-// GET endpoint to fetch a partner by ID
+// Make sure the parameter types match exactly what Next.js expects
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const id = parseInt(params.id);
 
-    // Check if ID is valid
+    // Rest of your code remains the same
     if (isNaN(id)) {
       return NextResponse.json(
         { error: 'Invalid partner ID' },
@@ -17,17 +17,14 @@ export async function GET(
       );
     }
 
-    // Fetch partner from database
     const partner = await prisma.partner.findUnique({
       where: { id }
     });
 
-    // If partner not found, return 404
     if (!partner) {
       return NextResponse.json({ error: 'Partner not found' }, { status: 404 });
     }
 
-    // Return the partner data
     return NextResponse.json({
       partner,
       status: 200
@@ -41,20 +38,24 @@ export async function GET(
   }
 }
 
-export async function PUT(request: Request) {
+// The PUT handler should also use the params from the route
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const body = await request.json();
-    const { id, ...data } = body;
+    const id = parseInt(params.id);
 
     // Validate required fields
-    if (!id) {
+    if (isNaN(id)) {
       return NextResponse.json(
-        { error: 'Partner ID is required' },
+        { error: 'Invalid partner ID' },
         { status: 400 }
       );
     }
 
-    if (!data.partner_name) {
+    if (!body.partner_name) {
       return NextResponse.json(
         { error: 'Partner name is required' },
         { status: 400 }
@@ -64,7 +65,7 @@ export async function PUT(request: Request) {
     // Check if partner with the same name already exists
     const existingPartner = await prisma.partner.findFirst({
       where: {
-        partner_name: data.partner_name,
+        partner_name: body.partner_name,
         id: {
           not: id
         }
@@ -74,7 +75,7 @@ export async function PUT(request: Request) {
     if (existingPartner) {
       return NextResponse.json(
         { error: 'A partner with this name already exists' },
-        { status: 409 } // 409 Conflict status code
+        { status: 409 }
       );
     }
 
@@ -84,10 +85,10 @@ export async function PUT(request: Request) {
         id: id
       },
       data: {
-        partner_name: data.partner_name,
-        description: data.description || '',
-        country: data.country || '',
-        currency: data.currency || 'USD'
+        partner_name: body.partner_name,
+        description: body.description || '',
+        country: body.country || '',
+        currency: body.currency || 'USD'
       }
     });
 
@@ -96,10 +97,20 @@ export async function PUT(request: Request) {
       partner: updatedPartner,
       status: 200
     });
-  } catch (error) {}
+  } catch (error) {
+    console.error('Error updating partner:', error);
+    return NextResponse.json(
+      { error: 'Failed to update partner' },
+      { status: 500 }
+    );
+  }
 }
 
-export async function DELETE({ params }: { params: { id: string } }) {
+// The DELETE handler using the consistent pattern
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const id = parseInt(params.id);
 
@@ -118,14 +129,12 @@ export async function DELETE({ params }: { params: { id: string } }) {
     if (!existingPartner) {
       return NextResponse.json({ error: 'Partner not found' }, { status: 404 });
     }
+
     // Delete partner using prisma
     await prisma.partner.delete({
       where: { id }
     });
     console.log('Partner deleted successfully:', id);
-    // Optionally, you can also delete related data if needed
-
-    // return success response
 
     return NextResponse.json({
       message: 'Partner deleted successfully',
