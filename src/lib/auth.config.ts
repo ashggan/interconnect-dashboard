@@ -49,6 +49,7 @@ const authConfig = {
       }
     })
   ],
+  secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     session: async ({ session, user }) => {
       // Add property to session, like an access_token from a provider.
