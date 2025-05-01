@@ -23,7 +23,7 @@ export default async function UserListingPage({}: UserListingPage) {
 
   console.log('baseUrl', process.env.VERCEL_URL);
 
-  const response = await fetch(`${baseUrl}/api/user`);
+  const response = await fetch(`/api/user`);
 
   const data = await response.json();
 
