@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import prisma from './prisma';
+
 import { baseUrl } from './constants';
 
 export function cn(...inputs: ClassValue[]) {
@@ -41,3 +41,23 @@ export const getUSerId = async (email: string) => {
   console.log('user', user);
   return user;
 };
+
+// Add this to src/lib/utils.ts
+export function getApiUrl(path: string): string {
+  // Remove leading slash if present to avoid double slashes
+  const apiPath = path.startsWith('/') ? path.slice(1) : path;
+
+  // For server-side
+  if (typeof window === 'undefined') {
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.NODE_ENV === 'development'
+        ? 'http://localhost:3000'
+        : '';
+
+    return `${baseUrl}/api/${apiPath}`;
+  }
+
+  // For client-side
+  return `/api/${apiPath}`;
+}

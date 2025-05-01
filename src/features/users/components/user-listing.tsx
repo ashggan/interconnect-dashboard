@@ -3,8 +3,8 @@
 import { DataTable as UserTable } from '@/components/ui/table/data-table';
 import { columns } from './user-tables/columns';
 import { User } from 'types';
-import { getAllUSers } from '@/actions/user';
-import { baseUrl } from '@/lib/constants';
+
+import { getApiUrl } from '@/lib/utils';
 
 type UserListingPage = {};
 
@@ -22,7 +22,8 @@ export default async function UserListingPage({}: UserListingPage) {
   //   ...(categories && { categories: categories })
   // };
 
-  const response = await fetch(`${baseUrl}/api/user`);
+  const response = await fetch(getApiUrl('user'));
+
   const data = await response.json();
 
   // console.log('data', data);
