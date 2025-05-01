@@ -16,12 +16,10 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-
-interface Upload {
-  name: string;
-  path?: string;
-  file: string | null;
-}
+import { useSession } from 'next-auth/react';
+import { getUSerId } from '@/lib/utils';
+import { FileUpload } from '@/constants/data';
+import { useEffect, useState } from 'react';
 
 const ACCEPTED_FILE_TYPES = [
   'text/csv',
@@ -44,20 +42,46 @@ const formSchema = z.object({
     .refine((files) => files?.length === 1, 'A single file is required.')
     .refine((files) => ACCEPTED_FILE_TYPES.includes(files[0]?.type), {
       message: 'Only .csv, .xls, or .xlsx files are accepted.'
+    }),
+  userId: z
+    .string()
+    .min(1, {
+      message: 'userId is required.'
     })
+    .max(48, {
+      message: 'userId must be less than 48 characters.'
+    })
+    .optional()
+    .nullable()
 });
 
 export default function UploadForm({
   initialData,
   pageTitle
 }: {
-  initialData: Upload | null;
+  initialData: FileUpload | null;
   pageTitle: string;
 }) {
+  const [userId, setUserId] = useState<string>('');
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    const fetchUserId = async () => {
+      if (session?.user?.email) {
+        const id = await getUSerId(session.user.email);
+        setUserId(id);
+        console.log('userId', id);
+      }
+    };
+
+    fetchUserId();
+  }, [session]);
+
   const defaultValues: z.infer<typeof formSchema> = {
-    file: null,
     name: initialData?.name || '',
-    path: initialData?.path || ''
+    path: initialData?.path || '',
+    userId: initialData?.userId ? String(initialData.userId) : '',
+    file: initialData?.file || null
   };
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -66,45 +90,8 @@ export default function UploadForm({
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const formData = new FormData();
-    formData.append('file', values.file[0]);
-    formData.append('name', values.name);
-    formData.append('userId', 'userId');
-    formData.append('path', `/uploads/${values.file[0].name}`);
-
-    console.log('Form data:', formData);
-
-    try {
-      if (!values.file || values.file.length === 0) {
-        toast.error('No file selected');
-        return;
-      }
-
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-
-      switch (res.status) {
-        case 200:
-          toast.success('File uploaded successfully');
-          break;
-        case 409:
-          toast.error('File already exists');
-          break;
-        case 400:
-          toast.error('Missing required fields');
-          break;
-        case 500:
-          toast.error('Failed to upload file');
-          break;
-        default:
-          toast.error('Failed to upload file');
-      }
-    } catch (error) {
-      console.error('Upload failed:', error);
-      toast.error('An unexpected error occurred');
-    }
+    console.log('values', values);
+    // Add your form submission logic here
   };
 
   return (

@@ -40,8 +40,7 @@ const authConfig = {
             id: String(user.id),
             name: user.name,
             email: user.email,
-            role: user.role,
-            image: null
+            role: user.role
           } as User;
         } else {
           // If you return null then an error will be displayed advising the user to check their details.
@@ -50,6 +49,16 @@ const authConfig = {
       }
     })
   ],
+  callbacks: {
+    session: async ({ session, user }) => {
+      // Add property to session, like an access_token from a provider.
+      if (user) {
+        session.user.id = user.id;
+        session.user.role = user.role;
+      }
+      return session;
+    }
+  },
   pages: {
     signIn: '/dashboard/overview' //sigin page
   }

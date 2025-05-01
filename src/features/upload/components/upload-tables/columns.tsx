@@ -1,43 +1,23 @@
+// src/features/upload/components/upload-tables/columns.tsx
 'use client';
-import { Product } from '@/constants/data';
+
 import { ColumnDef } from '@tanstack/react-table';
-// import Image from 'next/image';
-import { CellAction } from '../../../products/components/product-tables/cell-action';
+import { CellAction } from './cell-action';
+import { FileUpload } from '@/constants/data';
 
-export const columns: ColumnDef<Product>[] = [
-  // {
-  //   accessorKey: 'photo_url',
-  //   header: 'IMAGE',
-  //   cell: ({ row }) => {
-  //     return (
-  //       <div className='relative aspect-square'>
-  //         <Image
-  //           src={row.getValue('photo_url')}
-  //           alt={row.getValue('name')}
-  //           fill
-  //           className='rounded-lg'
-  //         />
-  //       </div>
-  //     );
-  //   }
-  // },
+export const columns: ColumnDef<FileUpload>[] = [
   {
-    accessorKey: 'name',
-    header: 'NAME'
+    accessorKey: 'fileName',
+    header: 'File Name'
   },
-  // {
-  //   accessorKey: 'category',
-  //   header: 'CATEGORY'
-  // },
-  // {
-  //   accessorKey: 'price',
-  //   header: 'PRICE'
-  // },
-  // {
-  //   accessorKey: 'description',
-  //   header: 'DESCRIPTION'
-  // },
-
+  {
+    accessorKey: 'fileType',
+    header: 'Type'
+  },
+  {
+    accessorKey: 'uploadDate',
+    header: 'Uploaded At'
+  },
   {
     id: 'actions',
     cell: ({ row }) => <CellAction data={row.original} />
