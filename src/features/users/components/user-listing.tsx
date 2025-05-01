@@ -22,7 +22,12 @@ export default async function UserListingPage({}: UserListingPage) {
   //   ...(categories && { categories: categories })
   // };
 
-  const response = await fetch(getApiUrl('user'));
+  const response = await fetch(getApiUrl('user'), {
+    headers: {
+      Accept: 'application/json'
+    },
+    cache: 'no-store'
+  });
 
   const data = await response.json();
 
