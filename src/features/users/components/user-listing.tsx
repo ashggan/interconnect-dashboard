@@ -21,9 +21,11 @@ export default async function UserListingPage({}: UserListingPage) {
   //   ...(categories && { categories: categories })
   // };
 
-  console.log('baseUrl', process.env.VERCEL_URL);
-
-  const response = await fetch(`/api/user`);
+  // const BASE_URL =
+  // process.env.NEXT_PUBLIC_VERCEL_URL || 'http://localhost:3000'; // Default to localhost if not defined
+  const response = await fetch(
+    `https://interconnect-dashboard.vercel.app/api/user`
+  );
 
   const data = await response.json();
 
