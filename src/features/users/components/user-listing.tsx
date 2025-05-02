@@ -3,7 +3,6 @@
 import { DataTable as UserTable } from '@/components/ui/table/data-table';
 import { columns } from './user-tables/columns';
 import { User } from 'types';
-import { baseUrl } from '@/lib/constants';
 
 type UserListingPage = {};
 
@@ -21,7 +20,9 @@ export default async function UserListingPage({}: UserListingPage) {
   //   ...(categories && { categories: categories })
   // };
 
-  const response = await fetch(`${baseUrl}/api/user`);
+  const response = await fetch(
+    `https://interconnect-dashboard.vercel.app/api/user`
+  );
 
   const data = await response.json();
 

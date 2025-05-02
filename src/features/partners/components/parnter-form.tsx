@@ -79,13 +79,16 @@ export default function ParnterForm({
         ? 'Failed to update partner'
         : 'Failed to create partner';
 
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ ...values, id: initialData?.id })
-      });
+      const res = await fetch(
+        `https://interconnect-dashboard.vercel.app${url}`,
+        {
+          method,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ ...values, id: initialData?.id })
+        }
+      );
 
       const data = await res.json();
 

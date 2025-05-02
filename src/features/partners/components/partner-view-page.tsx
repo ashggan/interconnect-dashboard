@@ -1,5 +1,4 @@
 import ParnterForm from './parnter-form';
-import { baseUrl } from '@/lib/constants';
 
 type TProductViewPageProps = {
   partnerId: string;
@@ -12,10 +11,13 @@ export default async function PartnerViewPage({
   let pageTitle = 'Create New Partner';
 
   if (partnerId !== 'new') {
-    const response = await fetch(`${baseUrl}/api/partner/${partnerId}`, {
-      method: 'GET',
-      cache: 'no-store'
-    }).then((res) => {
+    const response = await fetch(
+      `https://interconnect-dashboard.vercel.app/api/partner/${partnerId}`,
+      {
+        method: 'GET',
+        cache: 'no-store'
+      }
+    ).then((res) => {
       if (!res.ok) {
         throw new Error('Failed to fetch data');
       }

@@ -100,19 +100,22 @@ export default function TrunkForm({
       const errorMessage = initialData
         ? 'Failed to update trunk'
         : 'Failed to create trunk';
-      console.log('url', url);
+      // console.log('url', url);
 
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...values,
-          id: initialData?.id,
-          partnerId: parseInt(values.partnerId)
-        })
-      });
+      const res = await fetch(
+        `https://interconnect-dashboard.vercel.app${url}`,
+        {
+          method,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            ...values,
+            id: initialData?.id,
+            partnerId: parseInt(values.partnerId)
+          })
+        }
+      );
 
       const data = await res.json();
 
