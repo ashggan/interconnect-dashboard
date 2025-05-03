@@ -2,6 +2,7 @@ import { Partner } from '@/constants/data';
 // import { searchParamsCache } from '@/lib/searchparams';
 import { DataTable as PartnerTable } from '@/components/ui/table/data-table';
 import { columns } from './partner-tables/columns';
+import { baseUrl } from '@/lib/constants';
 
 type PartnerListingPage = {};
 
@@ -19,9 +20,7 @@ export default async function PartnerListingPage({}: PartnerListingPage) {
   //   ...(categories && { categories: categories })
   // };
 
-  const response = await fetch(
-    `https://interconnect-dashboard.vercel.app/api/partner`
-  );
+  const response = await fetch(`${baseUrl}/api/partner`);
   const data = await response.json();
   const totalPartners = data.partners?.length || 0;
   const partners: Partner[] = data.partners || [];
