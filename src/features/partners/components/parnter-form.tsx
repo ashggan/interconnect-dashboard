@@ -28,6 +28,7 @@ import * as z from 'zod';
 import countries from '@/constants/countries.json';
 import { toast } from 'sonner';
 import Router from 'next/router';
+import { baseUrl } from '@/lib/constants';
 
 const formSchema = z.object({
   partner_name: z.string().min(2, {
@@ -79,16 +80,13 @@ export default function ParnterForm({
         ? 'Failed to update partner'
         : 'Failed to create partner';
 
-      const res = await fetch(
-        `https://interconnect-dashboard.vercel.app${url}`,
-        {
-          method,
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ ...values, id: initialData?.id })
-        }
-      );
+      const res = await fetch(`${baseUrl}${url}`, {
+        method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ...values, id: initialData?.id })
+      });
 
       const data = await res.json();
 
