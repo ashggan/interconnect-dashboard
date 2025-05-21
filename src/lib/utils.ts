@@ -38,7 +38,7 @@ export const getUSerId = async (email: string) => {
 
   const user = await data.json();
 
-  console.log('user', user);
+  // console.log('user', user);
   return user;
 };
 

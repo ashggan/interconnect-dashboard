@@ -114,9 +114,13 @@ export type Trunk = {
 export type FileUpload = {
   id?: number;
   name: string;
-  path: string;
-  file?: File | null;
+  originalName: string;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  url: string; // Added URL field
   userId: number;
+  downloadCount: number;
   createdAt?: string;
   updatedAt?: string;
 };

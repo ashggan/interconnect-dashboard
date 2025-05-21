@@ -1,4 +1,3 @@
-import { notFound } from 'next/navigation';
 import UploadForm from './ulpoad-form';
 
 type TUploadtViewPageProps = {
@@ -13,13 +12,25 @@ export default async function UploadViewPage({
 
   console.log(uploadId);
   if (uploadId !== 'new') {
-    //   const data = await fakeProducts.getProductById(Number(productId));
-    //   product = data.product as Product;
-    //   console.log(productId);
+    const response = await fetch(
+      `https://interconnect-dashboard.vercel.app/api/upload/${uploadId}`,
+      {
+        method: 'GET',
+        cache: 'no-store'
+      }
+    ).then((res) => {
+      if (!res.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      return res;
+    });
+
+    const data = await response.json();
+    upload = data.upload;
+
+    console.log('upload', upload);
+
     pageTitle = `Edit Upload File`;
-    if (!upload) {
-      notFound();
-    }
   }
 
   return <UploadForm initialData={upload} pageTitle={pageTitle} />;

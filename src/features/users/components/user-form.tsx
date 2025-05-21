@@ -28,6 +28,7 @@ import { Role } from '@prisma/client';
 import { User } from 'types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formSchema } from '@/features/users/utils/form-schema';
+import { baseUrl } from '@/lib/constants';
 
 export default function UserForm({
   initialData,
@@ -61,21 +62,19 @@ export default function UserForm({
 
     try {
       const method = initialData ? 'PUT' : 'POST';
-      const url = initialData ? `/api/user/${initialData.id}` : '/api/user';
+      const url = initialData ? `api/user/${initialData.id}` : 'api/user';
 
-      const res = await fetch(
-        `https://interconnect-dashboard.vercel.app/${url}`,
-        {
-          method,
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            ...values,
-            id: initialData?.id
-          })
-        }
-      );
+      const res = await fetch(`${baseUrl}${url}`, {
+        method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          ...values,
+          id: initialData?.id
+        })
+      });
 
       // Handle potential empty or malformed responses
       let data;

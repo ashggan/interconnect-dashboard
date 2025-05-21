@@ -7,7 +7,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("db_DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -23,14 +23,32 @@ model User {
   FileUpload FileUpload[]
 }
 
+ 
 model FileUpload {
-  id        Int     @id @default(autoincrement())
-  name      String
-  path      String
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now()) @map(name: "created_at")
-  updatedAt DateTime @updatedAt @map(name: "updated_at")
+  id            Int      @id @default(autoincrement())
+  
+  // File names and identification
+  name          String   // User-provided name/description
+  originalName  String   // Original filename from upload
+  fileName      String   // Generated filename with timestamp
+  
+  // File properties
+  mimeType      String   // MIME type of the file
+  fileSize      Int      // File size in bytes 
+   url           String   // Vercel Blob Storage URL
+  
+  // User relationship
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Usage tracking
+  downloadCount Int      @default(0)
+  
+  // Timestamps
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  @@map("file_uploads")
 }
 
 model Partner {

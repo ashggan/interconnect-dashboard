@@ -17,9 +17,9 @@ import * as z from 'zod';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
-import { getUSerId } from '@/lib/utils';
 import { FileUpload } from '@/constants/data';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const ACCEPTED_FILE_TYPES = [
   'text/csv',
@@ -27,32 +27,22 @@ const ACCEPTED_FILE_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 ];
 
+// Updated schema without path field
 const formSchema = z.object({
   name: z
     .string()
     .min(3, {
-      message: 'name must be at least 3 characters.'
+      message: 'Name must be at least 3 characters.'
     })
-    .max(48, {
-      message: 'Description must be less than 48 characters.'
+    .max(100, {
+      message: 'Name must be less than 100 characters.'
     }),
-  path: z.string(),
   file: z
     .any()
     .refine((files) => files?.length === 1, 'A single file is required.')
     .refine((files) => ACCEPTED_FILE_TYPES.includes(files[0]?.type), {
       message: 'Only .csv, .xls, or .xlsx files are accepted.'
-    }),
-  userId: z
-    .string()
-    .min(1, {
-      message: 'userId is required.'
     })
-    .max(48, {
-      message: 'userId must be less than 48 characters.'
-    })
-    .optional()
-    .nullable()
 });
 
 export default function UploadForm({
@@ -64,34 +54,91 @@ export default function UploadForm({
 }) {
   const [userId, setUserId] = useState<string>('');
   const { data: session } = useSession();
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchUserId = async () => {
       if (session?.user?.email) {
-        const id = await getUSerId(session.user.email);
-        setUserId(id);
-        console.log('userId', id);
+        try {
+          const response = await fetch('/api/test', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email: session.user.email })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setUserId(String(data.userId));
+          } else {
+            throw new Error('Failed to get user ID');
+          }
+        } catch (error) {
+          console.error('Error fetching user ID:', error);
+          toast.error('Failed to get user information');
+        }
       }
     };
 
     fetchUserId();
   }, [session]);
 
+  // Updated default values without path
   const defaultValues: z.infer<typeof formSchema> = {
     name: initialData?.name || '',
-    path: initialData?.path || '',
-    userId: initialData?.userId ? String(initialData.userId) : '',
-    file: initialData?.file || null
+    file: null
   };
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    values: defaultValues
+    defaultValues
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log('values', values);
-    // Add your form submission logic here
+    if (!userId) {
+      toast.error('User authentication required');
+      return;
+    }
+
+    if (!values.file || values.file.length === 0) {
+      toast.error('Please select a file');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('name', values.name);
+      formData.append('userId', userId);
+      formData.append('file', values.file[0]);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
+
+      const result = await response.json();
+      toast.success('File uploaded successfully!');
+      console.log('Upload result:', result);
+
+      // Reset form after successful upload
+      form.reset();
+
+      // Redirect to uploads list
+      router.push('/dashboard/upload');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(error instanceof Error ? error.message : 'Upload failed');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -111,7 +158,11 @@ export default function UploadForm({
                 <FormItem>
                   <FormLabel>File Name</FormLabel>
                   <FormControl>
-                    <Input placeholder='Enter File name' {...field} />
+                    <Input
+                      placeholder='Enter a descriptive name for this file'
+                      {...field}
+                      disabled={isLoading}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -121,31 +172,43 @@ export default function UploadForm({
               control={form.control}
               name='file'
               render={({ field }) => (
-                <div className='space-y-6'>
-                  <FormItem className='w-full'>
-                    <FormLabel>file</FormLabel>
-                    <FormControl>
-                      <FileUploader
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        maxFiles={1}
-                        maxSize={4 * 1024 * 1024}
-                        accept={{
-                          'application/*': ['.xlsx', '.xls', '.csv']
-                        }}
-                        // disabled={loading}
-                        // progresses={progresses}
-                        // pass the onUpload function here for direct upload
-                        // onUpload={uploadFiles}
-                        // disabled={isUploading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                </div>
+                <FormItem className='w-full'>
+                  <FormLabel>Upload File</FormLabel>
+                  <FormControl>
+                    <FileUploader
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      maxFiles={1}
+                      maxSize={100 * 1024 * 1024} // 100MB max
+                      accept={{
+                        'text/csv': ['.csv'],
+                        'application/vnd.ms-excel': ['.xls'],
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+                          ['.xlsx']
+                      }}
+                      disabled={isLoading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-            <Button type='submit'>Upload </Button>
+
+            {/* Show upload progress or status */}
+            {isLoading && (
+              <div className='flex items-center space-x-2 text-sm text-gray-600'>
+                <div className='h-4 w-4 animate-spin rounded-full border-2 border-primary border-r-transparent' />
+                <span>Uploading ...</span>
+              </div>
+            )}
+
+            <Button
+              type='submit'
+              disabled={isLoading || !userId}
+              className='w-full'
+            >
+              {isLoading ? 'Uploading...' : 'Upload File'}
+            </Button>
           </form>
         </Form>
       </CardContent>

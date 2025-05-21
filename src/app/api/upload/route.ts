@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
+
 import prisma from '@/lib/prisma';
+import path from 'path';
+import { put } from '@vercel/blob';
 
 // GET endpoint to retrieve all file uploads
 export async function GET() {
@@ -25,89 +26,82 @@ export async function GET() {
   }
 }
 
-// POST endpoint to upload a file
 export async function POST(req: NextRequest) {
-  const formData = await req.formData();
-  const file = formData.get('file') as File | null;
-  const name = formData.get('name') as string | null;
-  const userId = formData.get('userId') as string | null;
-
-  // Validation checks
-  if (!file || !name || !userId) {
-    return NextResponse.json(
-      { error: 'Missing required fields' },
-      { status: 400 }
-    );
-  }
-
-  // Check file type
-  const allowedTypes = [
-    'text/csv',
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-  ];
-  if (!allowedTypes.includes(file.type)) {
-    return NextResponse.json(
-      { error: 'Only CSV, XLS, or XLSX files are allowed' },
-      { status: 400 }
-    );
-  }
-
-  // Check file size (10MB max)
-  const maxSize = 100 * 1024 * 1024; // 100MB
-  if (file.size > maxSize) {
-    return NextResponse.json(
-      { error: 'File size exceeds the 100MB limit' },
-      { status: 400 }
-    );
-  }
-
   try {
-    const uploadsDir = path.join(process.cwd(), 'public/uploads');
+    const formData = await req.formData();
+    const file = formData.get('file') as File | null;
+    const name = formData.get('name') as string | null;
+    const userId = formData.get('userId') as string | null;
 
-    // Ensure the uploads directory exists
-    await fs.mkdir(uploadsDir, { recursive: true });
+    // Validation checks
+    if (!file || !name || !userId) {
+      return NextResponse.json(
+        { error: 'Missing required fields: file, name, or userId' },
+        { status: 400 }
+      );
+    }
 
-    // Create a unique filename to prevent collisions
+    // Validate file type
+    const allowedTypes = [
+      'text/csv',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+    if (!allowedTypes.includes(file.type)) {
+      return NextResponse.json(
+        { error: 'Only CSV, XLS, or XLSX files are allowed' },
+        { status: 400 }
+      );
+    }
+
+    // Check file size (100MB max)
+    const maxSize = 100 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return NextResponse.json(
+        { error: 'File size exceeds the 100MB limit' },
+        { status: 400 }
+      );
+    }
+
+    // Generate unique filename
     const timestamp = new Date().getTime();
-    const originalName = file.name;
-    const fileExtension = path.extname(originalName);
+    const fileExtension = path.extname(file.name);
     const fileName = `${timestamp}-${name.replace(/\s+/g, '_')}${fileExtension}`;
-    const filePath = path.join(uploadsDir, fileName);
 
-    // Convert relative path to URL path for storage
-    const publicPath = `/uploads/${fileName}`;
+    // Upload file to Vercel Blob Storage
+    const blob = await put(fileName, file, {
+      access: 'public',
+      token: process.env.BLOB_READ_WRITE_TOKEN
+    });
 
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    console.log('File uploaded to Vercel Blob:', blob.url);
 
-    // Write the file to the uploads directory
-    // await fs.writeFile(filePath, fileBuffer);
-
-    const fileData = {
-      name: fileName,
-      userId: parseInt(userId, 10), // Convert string to integer
-      path: publicPath
-    };
-    console.log('File data:', fileData);
-
-    // Save file information to the database using the correct schema
-    const data = await prisma.fileUpload.create({
+    // Save file information to database (without path)
+    const fileUpload = await prisma.fileUpload.create({
       data: {
-        userId: parseInt(userId, 10), // Convert string to integer
-        path: publicPath,
-        name: name
+        name, // User-provided name
+        originalName: file.name, // Original filename
+        fileName, // Generated filename
+        mimeType: file.type, // MIME type
+        fileSize: file.size, // File size in bytes
+        url: blob.url,
+        userId: parseInt(userId, 10)
       }
     });
 
-    console.log('Upload data saved to database:', data);
+    console.log('File metadata saved to database:', fileUpload);
 
     return NextResponse.json(
       {
-        message: 'Upload successful',
+        message: 'File uploaded successfully',
         file: {
-          id: data.id,
-          name: data.name,
-          path: data.path
+          id: fileUpload.id,
+          name: fileUpload.name,
+          originalName: fileUpload.originalName,
+          fileName: fileUpload.fileName,
+          mimeType: fileUpload.mimeType,
+          fileSize: fileUpload.fileSize,
+          createdAt: fileUpload.createdAt
         }
       },
       { status: 200 }
