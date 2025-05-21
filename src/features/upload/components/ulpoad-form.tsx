@@ -39,8 +39,12 @@ const formSchema = z.object({
     }),
   file: z
     .any()
-    .refine((files) => files?.length === 1, 'A single file is required.')
-    .refine((files) => ACCEPTED_FILE_TYPES.includes(files[0]?.type), {
+    .optional()
+    .refine(
+      (files) => !files || files.length === 1,
+      'A single file is required.'
+    )
+    .refine((files) => !files || ACCEPTED_FILE_TYPES.includes(files[0]?.type), {
       message: 'Only .csv, .xls, or .xlsx files are accepted.'
     })
 });
@@ -102,17 +106,16 @@ export default function UploadForm({
       return;
     }
 
-    if (!values.file || values.file.length === 0) {
-      toast.error('Please select a file');
-      return;
-    }
-
     setIsLoading(true);
     try {
       const formData = new FormData();
       formData.append('name', values.name);
       formData.append('userId', userId);
-      formData.append('file', values.file[0]);
+
+      // Only append file if it exists (for new uploads)
+      if (values.file && values.file.length > 0) {
+        formData.append('file', values.file[0]);
+      }
 
       const response = await fetch('/api/upload', {
         method: 'POST',
@@ -168,31 +171,33 @@ export default function UploadForm({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name='file'
-              render={({ field }) => (
-                <FormItem className='w-full'>
-                  <FormLabel>Upload File</FormLabel>
-                  <FormControl>
-                    <FileUploader
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      maxFiles={1}
-                      maxSize={100 * 1024 * 1024} // 100MB max
-                      accept={{
-                        'text/csv': ['.csv'],
-                        'application/vnd.ms-excel': ['.xls'],
-                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
-                          ['.xlsx']
-                      }}
-                      disabled={isLoading}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!initialData && (
+              <FormField
+                control={form.control}
+                name='file'
+                render={({ field }) => (
+                  <FormItem className='w-full'>
+                    <FormLabel>Upload File</FormLabel>
+                    <FormControl>
+                      <FileUploader
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        maxFiles={1}
+                        maxSize={100 * 1024 * 1024} // 100MB max
+                        accept={{
+                          'text/csv': ['.csv'],
+                          'application/vnd.ms-excel': ['.xls'],
+                          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+                            ['.xlsx']
+                        }}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {/* Show upload progress or status */}
             {isLoading && (

@@ -25,8 +25,7 @@ export default async function UploadViewPage({
       return res;
     });
 
-    const data = await response.json();
-    upload = data.upload;
+    upload = await response.json();
 
     console.log('upload', upload);
 
