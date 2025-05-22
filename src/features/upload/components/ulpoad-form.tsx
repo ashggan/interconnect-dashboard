@@ -100,49 +100,58 @@ export default function UploadForm({
     defaultValues
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!userId) {
-      toast.error('User authentication required');
-      return;
-    }
-
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
+
     try {
+      const method = initialData ? 'PUT' : 'POST';
+      const url = initialData ? `/api/upload/${initialData.id}` : '/api/upload';
+      const successMessage = initialData
+        ? 'File updated successfully!'
+        : 'File uploaded successfully!';
+      const errorMessage = initialData
+        ? 'Failed to update file'
+        : 'Failed to upload file';
+
+      if (!userId) {
+        toast.error('User authentication required');
+        return;
+      }
+
       const formData = new FormData();
       formData.append('name', values.name);
       formData.append('userId', userId);
 
-      // Only append file if it exists (for new uploads)
       if (values.file && values.file.length > 0) {
         formData.append('file', values.file[0]);
       }
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
+      const res = await fetch(url, {
+        method,
         body: formData
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Upload failed');
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || errorMessage);
       }
 
-      const result = await response.json();
-      toast.success('File uploaded successfully!');
-      console.log('Upload result:', result);
+      toast.success(successMessage);
 
-      // Reset form after successful upload
-      form.reset();
+      if (!initialData) {
+        form.reset();
+      }
 
-      // Redirect to uploads list
       router.push('/dashboard/upload');
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error(error instanceof Error ? error.message : 'Upload failed');
+      toast.error(
+        error instanceof Error ? error.message : 'An unexpected error occurred'
+      );
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   return (
     <Card className='mx-auto w-full'>

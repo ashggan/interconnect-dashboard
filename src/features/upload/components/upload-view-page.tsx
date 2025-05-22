@@ -10,7 +10,6 @@ export default async function UploadViewPage({
   let upload = null;
   let pageTitle = ' New CSV File';
 
-  console.log(uploadId);
   if (uploadId !== 'new') {
     const response = await fetch(
       `https://interconnect-dashboard.vercel.app/api/upload/${uploadId}`,
@@ -26,8 +25,6 @@ export default async function UploadViewPage({
     });
 
     upload = await response.json();
-
-    console.log('upload', upload);
 
     pageTitle = `Edit Upload File`;
   }
