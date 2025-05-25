@@ -49,6 +49,7 @@ const authConfig = {
       }
     })
   ],
+  trustHost: true,
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     session: async ({ session, user }) => {

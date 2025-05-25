@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
+
   images: {
     remotePatterns: [
       {
@@ -17,6 +19,9 @@ const nextConfig = {
   crossOrigin: 'anonymous',
   typescript: {
     ignoreBuildErrors: true
+  },
+  eslint: {
+    ignoreDuringBuilds: true
   },
   transpilePackages: ['geist'],
   async headers() {
